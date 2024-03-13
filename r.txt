@@ -1,0 +1,12 @@
+tabs:
+  - open
+  - closed
+
+table columns:
+  time since open (1h, 1d, 1w, 1m, 1y)
+  title
+  priority
+  boards
+  - future due
+
+preview pane right side
