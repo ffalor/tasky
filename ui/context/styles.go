@@ -17,6 +17,13 @@ type Styles struct {
 	MainTextStyle  lipgloss.Style
 	StatusBarStyle lipgloss.Style
 	HelpStyle      help.Styles
+
+	Tabs struct {
+		Tab          lipgloss.Style
+		ActiveTab    lipgloss.Style
+		TabSeparator lipgloss.Style
+		TabsRow      lipgloss.Style
+	}
 }
 
 // BuildStyles builds the default styles to be used across the tui.
@@ -45,6 +52,27 @@ func BuildStyles(theme theme.Theme) Styles {
 	s.StatusBarStyle = lipgloss.NewStyle().
 		Background(theme.SelectedBackground).
 		Height(common.StatusBarHeight)
+
+	s.Tabs.Tab = lipgloss.NewStyle().
+		Faint(true).
+		Padding(0, 2)
+
+	s.Tabs.ActiveTab = s.Tabs.Tab.Copy().
+		Faint(false).
+		Bold(true).
+		Background(theme.SelectedBackground).
+		Foreground(theme.PrimaryText)
+
+	s.Tabs.TabSeparator = lipgloss.NewStyle().
+		Foreground(theme.SecondaryBorder)
+
+	s.Tabs.TabsRow = lipgloss.NewStyle().
+		Height(common.TabsContentHeight).
+		PaddingTop(1).
+		PaddingBottom(0).
+		BorderBottom(true).
+		BorderStyle(lipgloss.ThickBorder()).
+		BorderBottomForeground(theme.PrimaryBorder)
 
 	return s
 }

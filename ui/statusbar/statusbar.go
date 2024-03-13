@@ -61,7 +61,7 @@ func (m Model) View() string {
 		Foreground(theme.DefaultTheme.SelectedBackground).
 		Padding(0, 1).
 		Render("? help")
-	viewSwitcher := StatusStyle.Render(" PRs")
+	viewSwitcher := StatusStyle.Render("🗊 Tasks")
 	leftSection := ""
 	if m.leftSection != nil {
 		leftSection = *m.leftSection

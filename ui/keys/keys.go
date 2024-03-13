@@ -6,9 +6,9 @@ import "github.com/charmbracelet/bubbles/key"
 // KeyMap all program keys.
 type KeyMap struct {
 	AddTask key.Binding
-	Start   key.Binding
-	Reset   key.Binding
 	Quit    key.Binding
+	NextTab key.Binding
+	PrevTab key.Binding
 	Help    key.Binding
 }
 
@@ -17,8 +17,8 @@ func (k KeyMap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
 		{
 			k.AddTask,
-			k.Start,
-			k.Reset,
+			k.NextTab,
+			k.PrevTab,
 			k.Quit,
 			k.Help,
 		},
@@ -38,17 +38,17 @@ var Keys = KeyMap{
 		key.WithKeys("a"),
 		key.WithHelp("a", "Add a new task"),
 	),
+	NextTab: key.NewBinding(
+		key.WithKeys("right", "l"),
+		key.WithHelp("→/l", "next tab"),
+	),
+	PrevTab: key.NewBinding(
+		key.WithKeys("left", "h"),
+		key.WithHelp("←/h", "previous tab"),
+	),
 	Help: key.NewBinding(
 		key.WithKeys("?"),
 		key.WithHelp("?", "help"),
-	),
-	Start: key.NewBinding(
-		key.WithKeys("s"),
-		key.WithHelp("s", "start"),
-	),
-	Reset: key.NewBinding(
-		key.WithKeys("r"),
-		key.WithHelp("r", "reset"),
 	),
 	Quit: key.NewBinding(
 		key.WithKeys("ctrl+c", "q"),

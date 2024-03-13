@@ -2,6 +2,8 @@
 package ui
 
 import (
+	"strings"
+
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -10,7 +12,7 @@ import (
 	"github.com/ffalor/tasky/ui/context"
 	"github.com/ffalor/tasky/ui/keys"
 	"github.com/ffalor/tasky/ui/statusbar"
-	"github.com/ffalor/tasky/ui/table"
+	"github.com/ffalor/tasky/ui/tabs"
 	"github.com/ffalor/tasky/ui/theme"
 )
 
@@ -20,9 +22,9 @@ type initMsg struct{}
 // Model the main ui model.
 type Model struct {
 	ctx       context.ProgramContext
-	statusBar statusbar.Model
-	table     table.Model
 	keys      keys.KeyMap
+	statusBar statusbar.Model
+	tabs      tabs.Model
 }
 
 // NewModel creates the main ui model with defaults.
@@ -31,11 +33,8 @@ func NewModel() Model {
 		keys: keys.Keys,
 	}
 
-	statusBar := statusbar.NewModel(m.ctx)
-	m.statusBar = statusBar
-
-	table := table.New(m.ctx)
-	m.table = table
+	m.statusBar = statusbar.NewModel(m.ctx)
+	m.tabs = tabs.NewModel()
 
 	return m
 }
@@ -53,7 +52,6 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var (
 		cmd          tea.Cmd
 		statusBarCmd tea.Cmd
-		tableCmd     tea.Cmd
 		cmds         []tea.Cmd
 	)
 
@@ -69,10 +67,14 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case key.Matches(msg, m.keys.Help):
 			// todo replace use main content to track size
 			if !m.statusBar.ShowAll {
-				m.ctx.ScreenHeight = m.ctx.ScreenHeight + common.StatusBarHeight - common.ExpandedHelpHeight
+				m.ctx.MainContentHeight = m.ctx.MainContentHeight + common.StatusBarHeight - common.ExpandedHelpHeight
 			} else {
-				m.ctx.ScreenHeight = m.ctx.ScreenHeight + common.ExpandedHelpHeight - common.StatusBarHeight
+				m.ctx.MainContentHeight = m.ctx.MainContentHeight + common.ExpandedHelpHeight - common.StatusBarHeight
 			}
+		case key.Matches(msg, m.keys.NextTab):
+			m.tabs.NextTab()
+		case key.Matches(msg, m.keys.PrevTab):
+			m.tabs.PrevTab()
 		}
 
 	case initMsg:
@@ -82,28 +84,38 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	m.updateProgramContext()
 	m.statusBar, statusBarCmd = m.statusBar.Update(msg)
-	m.table, tableCmd = m.table.Update(msg)
 
-	cmds = append(cmds, cmd, statusBarCmd, tableCmd)
+	cmds = append(cmds, cmd, statusBarCmd)
 
 	return m, tea.Batch(cmds...)
 }
 
 func (m Model) View() string {
-	t := lipgloss.JoinVertical(lipgloss.Top, m.table.View(), m.statusBar.View())
-	return t
+	s := strings.Builder{}
+
+	s.WriteString(m.tabs.View(m.ctx))
+	s.WriteString("\n")
+	mainContent := lipgloss.NewStyle().Height(m.ctx.MainContentHeight).Render("No Main Content")
+	s.WriteString(mainContent)
+	s.WriteString("\n")
+	s.WriteString(m.statusBar.View())
+	return s.String()
 }
 
 // onWindowSizeChange update size sensitive values.
 func (m *Model) onWindowSizeChange(msg tea.WindowSizeMsg) {
-	m.table.SetTableHeight(msg.Height)
 	m.statusBar.SetWidth(msg.Width)
 	m.ctx.ScreenHeight = msg.Height
 	m.ctx.ScreenWidth = msg.Width
+
+	if m.statusBar.ShowAll {
+		m.ctx.MainContentHeight = msg.Height - common.TabsHeight - common.ExpandedHelpHeight
+	} else {
+		m.ctx.MainContentHeight = msg.Height - common.TabsHeight - common.StatusBarHeight
+	}
 }
 
 // updateProgramContext updates the ProgramContext across our different models.
 func (m *Model) updateProgramContext() {
 	m.statusBar.UpdateProgramContext(&m.ctx)
-	m.table.UpdateProgramContext(&m.ctx)
 }
